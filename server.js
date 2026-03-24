@@ -1,17 +1,26 @@
 import express from "express";
 import axios from "axios";
-import cors from "cors";
 import JSZip from "jszip";
 
 const app = express();
 
-app.use(cors({
-  origin: "*",
-  methods: ["GET", "POST"],
-  allowedHeaders: ["Content-Type"]
-}));
+// ✅ FULL CORS (Shopify + Firebase sorunsuz)
+app.use((req, res, next) => {
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+  res.header("Access-Control-Allow-Headers", "Content-Type");
+  res.header("Access-Control-Allow-Credentials", "true");
+
+  if (req.method === "OPTIONS") {
+    return res.sendStatus(200);
+  }
+
+  next();
+});
+
 app.use(express.json({ limit: "10mb" }));
 
+// ✅ ZIP API
 app.post("/download-zip", async (req, res) => {
   const { images } = req.body;
 
@@ -26,11 +35,18 @@ app.post("/download-zip", async (req, res) => {
 
     try {
       const response = await axios.get(url, {
-        responseType: "arraybuffer"
+        responseType: "arraybuffer",
+        timeout: 15000,
+        headers: {
+          "User-Agent": "Mozilla/5.0"
+        }
       });
 
-      const safeName = (name || `image_${i + 1}`).replace(/[\\/:*?"<>|]/g, "_");
+      const safeName = (name || `image_${i + 1}`)
+        .replace(/[\\/:*?"<>|]/g, "_");
+
       zip.file(`${safeName}.jpg`, response.data);
+
     } catch (err) {
       console.log("Download error:", url);
     }
@@ -46,6 +62,7 @@ app.post("/download-zip", async (req, res) => {
   res.send(content);
 });
 
+// ✅ SERVER
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
