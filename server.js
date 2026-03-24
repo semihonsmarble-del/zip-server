@@ -5,7 +5,11 @@ import JSZip from "jszip";
 
 const app = express();
 
-app.use(cors());   // 👈 KRİTİK SATIR
+app.use(cors({
+  origin: "*",
+  methods: ["GET", "POST"],
+  allowedHeaders: ["Content-Type"]
+}));
 app.use(express.json({ limit: "10mb" }));
 
 app.post("/download-zip", async (req, res) => {
