@@ -4,6 +4,8 @@ import cors from "cors";
 import JSZip from "jszip";
 
 const app = express();
+
+app.use(cors());   // 👈 KRİTİK SATIR
 app.use(express.json({ limit: "10mb" }));
 
 app.post("/download-zip", async (req, res) => {
